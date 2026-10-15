@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Papan Tantangan — Konsep Pembuatan Peta Topografi</title>
+<style>
+:root{--navy:#10243a;--blue:#174c70;--teal:#13a89e;--gold:#f5bd4f;--paper:#f3f7f6;--ink:#183247;--muted:#617586;--white:#fff;--red:#d95757;--green:#16865d}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(145deg,#0c2034,#174c70);color:var(--ink);min-height:100vh}
+header{padding:22px 18px 16px;text-align:center;color:white}header .tag{display:inline-block;background:#ffffff20;border:1px solid #ffffff50;padding:6px 12px;border-radius:30px;font-size:.82rem;letter-spacing:.04em}h1{margin:10px 0 4px;font-size:clamp(1.55rem,4vw,2.5rem);line-height:1.12}header p{margin:5px auto;color:#d9e8ef;max-width:800px}
+main{max-width:1200px;margin:auto;padding:0 14px 32px}.scorebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+.team{background:white;border-radius:16px;padding:12px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 18px #071a2a40;border:3px solid transparent}.team.active{border-color:var(--gold);box-shadow:0 0 0 3px #f5bd4f40}.team input{width:100%;min-width:0;border:0;border-bottom:1px solid #d5e0e5;padding:5px;font-weight:700;font-size:1rem;color:var(--ink);background:transparent}.team .score{font-size:1.55rem;font-weight:850;color:var(--blue);white-space:nowrap;font-variant-numeric:tabular-nums}.team button{border:0;background:#e8f1f5;color:var(--blue);border-radius:10px;padding:10px 12px;font-weight:800;min-height:44px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;color:white;margin:0 0 12px}.toolbar .hint{font-size:.9rem;color:#d8e8ef}.toolbar button,.action{border:0;border-radius:12px;padding:12px 16px;font-weight:800;font-size:1rem;min-height:48px;cursor:pointer}.toolbar button{background:#ffffff18;color:white;border:1px solid #ffffff60}
+.board{display:grid;grid-template-columns:repeat(6,minmax(145px,1fr));gap:10px;overflow-x:auto;padding:2px 1px 12px}.category{background:#0c2c45;color:white;border-radius:13px;padding:13px 8px;text-align:center;font-size:.91rem;font-weight:850;min-height:82px;display:flex;align-items:center;justify-content:center;border:1px solid #ffffff35}
+.tile{background:linear-gradient(145deg,#fff,#e8f3f5);border:2px solid #c5dce2;border-radius:14px;min-height:92px;font-size:clamp(1.35rem,2.5vw,1.9rem);font-weight:900;color:#126c79;cursor:pointer;box-shadow:0 5px 0 #0a293d55;transition:transform .12s,background .12s;position:relative}.tile:active{transform:translateY(3px);box-shadow:0 2px 0 #0a293d55}.tile small{display:block;font-size:.65rem;letter-spacing:.04em;color:#5b7784}.tile.played{background:#d9e1e4;color:#71838a;border-color:#aab9bf;box-shadow:none;cursor:default}.tile.played:after{content:"✓ SUDAH DIMAINKAN";display:block;font-size:.59rem;letter-spacing:.02em;color:#42636d;margin-top:4px}
+.legend{color:#dceaf0;font-size:.88rem;text-align:center;margin:6px 0 0}
+.modal{position:fixed;inset:0;background:#061726cc;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}.modal.show{display:flex}.dialog{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--paper);border-radius:22px;padding:clamp(18px,4vw,30px);box-shadow:0 20px 70px #0008}.dialog-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.pill{background:#dceef0;color:#126c79;padding:7px 12px;border-radius:30px;font-weight:850;font-size:.85rem}.close{border:0;background:#e3e9eb;border-radius:50%;width:44px;height:44px;font-size:1.4rem;cursor:pointer}.dialog h2{font-size:clamp(1.25rem,3vw,1.8rem);margin:18px 0 10px;line-height:1.3}.question{font-size:1.12rem;line-height:1.55}.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.option{min-height:62px;text-align:left;padding:12px 14px;background:white;border:2px solid #cfdee2;border-radius:13px;font-size:1rem;font-weight:700;color:var(--ink);cursor:pointer}.option:disabled{cursor:default;opacity:1}.option.correct{border-color:var(--green);background:#e0f5eb}.option.wrong{border-color:var(--red);background:#ffebeb}.feedback{display:none;border-radius:14px;padding:14px;margin:14px 0;line-height:1.5}.feedback.show{display:block}.feedback.good{background:#e0f5eb;border:1px solid #8bd1ae}.feedback.bad{background:#fff0e9;border:1px solid #efb49c}.feedback strong{display:block;margin-bottom:4px}.dialog-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.action.primary{background:var(--teal);color:white;flex:1}.action.secondary{background:#e1e9ec;color:var(--ink)}.action:disabled{opacity:.5;cursor:not-allowed}.footer-note{color:var(--muted);font-size:.82rem;margin-top:15px}
+@media(max-width:850px){.board{grid-template-columns:repeat(6,155px)}.scorebar{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.scorebar{grid-template-columns:1fr}.team{padding:9px}.options{grid-template-columns:1fr}.toolbar{align-items:stretch}.toolbar button{flex:1}.board{grid-template-columns:repeat(6,140px)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">PERMAINAN KOLABORATIF • KELAS XI SMK</span>
+  <h1>🗺️ Papan Tantangan Peta Topografi</h1>
+  <p>Topik: Konsep Pembuatan Peta Topografi</p>
+</header>
+<main>
+  <section class="scorebar" aria-label="Papan skor">
+    <div class="team active" id="teamCard0"><button onclick="setTeam(0)" aria-label="Pilih Tim 1">▶</button><div style="flex:1;min-width:0"><input id="teamName0" value="Tim 1" aria-label="Nama Tim 1"></div><div class="score" id="score0">0</div></div>
+    <div class="team" id="teamCard1"><button onclick="setTeam(1)" aria-label="Pilih Tim 2">▶</button><div style="flex:1;min-width:0"><input id="teamName1" value="Tim 2" aria-label="Nama Tim 2"></div><div class="score" id="score1">0</div></div>
+  </section>
+  <div class="toolbar"><div class="hint" id="turnHint">Giliran: Tim 1 • Pilih satu kotak tantangan.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button onclick="toggleSound()" id="soundBtn">🔊 Suara: Aktif</button><button onclick="resetGame()">↻ Atur Ulang</button></div></div>
+  <section class="board" id="board" aria-label="Papan tantangan enam kategori"></section>
+  <p class="legend">Pilih kotak poin untuk membuka soal. Jawaban benar memperoleh poin sesuai nilai kotak.</p>
+</main>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="questionTitle">
+ <div class="dialog">
+  <div class="dialog-top"><span class="pill" id="questionMeta">Kategori • 100 poin</span><button class="close" onclick="closeModal()" aria-label="Tutup">×</button></div>
+  <h2 id="questionTitle">Tantangan</h2>
+  <div class="question" id="questionText"></div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+  <div class="dialog-actions"><button class="action secondary" onclick="closeModal()">Kembali ke Papan</button><button class="action primary" id="nextBtn" onclick="closeModal()" disabled>Selesai</button></div>
+  <div class="footer-note">Diskusikan jawaban bersama kelompok sebelum memilih opsi. Setiap kotak hanya dapat dimainkan satu kali.</div>
+ </div>
+</div>
+<script>
+const categories = [
+ {name:"Dasar Peta",items:[
+  ["Apa yang dimaksud dengan peta topografi?","Peta yang menggambarkan bentuk relief dan kenampakan permukaan bumi secara detail","Peta khusus persebaran penduduk","Peta yang hanya menunjukkan batas administrasi","Foto permukaan bumi tanpa informasi tambahan",0,"Peta topografi menyajikan relief melalui garis kontur serta berbagai kenampakan alam dan buatan."],
+  ["Informasi utama yang membedakan peta topografi dari peta umum sederhana adalah …","Warna bendera wilayah","Ketinggian dan bentuk permukaan bumi","Jumlah kendaraan","Nama pemilik lahan",1,"Relief atau bentuk permukaan bumi menjadi informasi penting pada peta topografi."],
+  ["Garis kontur pada peta topografi menghubungkan titik-titik yang memiliki …","Jarak yang sama dari pantai","Jenis tanah yang sama","Ketinggian yang sama","Kemiringan yang sama",2,"Setiap garis kontur menghubungkan titik dengan elevasi yang sama."],
+  ["Peta topografi paling tepat digunakan untuk …","Menentukan bentuk relief dan perencanaan jalur lapangan","Menentukan ramalan cuaca harian secara langsung","Mengukur suhu udara setiap jam","Menentukan jumlah penduduk tanpa data",0,"Peta topografi membantu membaca relief, lereng, lembah, punggungan, dan perencanaan kegiatan lapangan."]
+ ]},
+ {name:"Data & Survei",items:[
+  ["Salah satu sumber data untuk membuat peta topografi adalah …","Daftar lagu daerah","Pengukuran terestris dan citra penginderaan jauh","Catatan transaksi toko","Jadwal pelajaran",1,"Data dapat diperoleh melalui survei GNSS, total station, sipat datar, foto udara, atau citra satelit."],
+  ["Alat yang umum digunakan untuk mengukur sudut dan jarak dalam survei pemetaan adalah …","Termometer","Barometer","Total station","Anemometer",2,"Total station mengukur sudut dan jarak untuk memperoleh posisi titik."],
+  ["Mengapa titik kontrol diperlukan dalam pemetaan?","Sebagai acuan posisi dan elevasi pengukuran","Untuk memperindah legenda","Untuk mengganti seluruh data lapangan","Untuk menentukan nama peta",0,"Titik kontrol menjadi kerangka acuan agar hasil pengukuran terikat pada sistem koordinat dan datum yang benar."],
+  ["Saat survei, pencatatan koordinat dan tinggi titik sebaiknya dilakukan …","Hanya setelah pekerjaan selesai","Berdasarkan perkiraan visual","Tanpa mencatat metode pengukuran","Secara teliti beserta kode titik dan metadata",3,"Catatan lapangan yang lengkap membantu pengolahan, pemeriksaan, dan penelusuran kualitas data."]
+ ]},
+ {name:"Skala & Koordinat",items:[
+  ["Skala 1 : 25.000 berarti …","1 cm di peta mewakili 25.000 cm di lapangan","1 cm di peta mewakili 25.000 km","25.000 cm di peta mewakili 1 cm di lapangan","1 cm di peta mewakili 25 m",0,"Pada skala 1:25.000, satu sentimeter di peta setara dengan 25.000 cm atau 250 m di lapangan."],
+  ["Jarak dua titik pada peta 4 cm dengan skala 1:50.000. Jarak mendatarnya di lapangan adalah …","200 m","500 m","2 km","20 km",2,"4 × 50.000 cm = 200.000 cm = 2.000 m atau 2 km."],
+  ["Sistem koordinat pada peta berguna untuk …","Menentukan warna simbol","Menentukan posisi suatu titik secara terukur","Menghias bingkai peta","Mengubah skala secara otomatis",1,"Koordinat menunjukkan lokasi titik berdasarkan sistem referensi tertentu."],
+  ["Sebelum menghitung jarak dari peta, hal yang harus diperiksa adalah …","Warna kertas","Jenis huruf judul","Jumlah simbol","Skala peta dan satuannya",3,"Skala dan konsistensi satuan harus dipahami agar hasil pengukuran jarak benar."]
+ ]},
+ {name:"Kontur & Relief",items:[
+  ["Interval kontur adalah …","Jarak horizontal antardesa","Selisih tinggi antara dua garis kontur berurutan","Panjang garis tepi peta","Jumlah kontur dalam satu lembar",1,"Interval kontur menyatakan beda tinggi tetap antara kontur yang berurutan."],
+  ["Jika garis kontur tampak sangat rapat, kondisi lereng umumnya …","Terjal","Datar","Landai","Selalu berupa dataran tinggi",0,"Kontur rapat menunjukkan perubahan elevasi besar dalam jarak horizontal pendek, sehingga lereng lebih terjal."],
+  ["Pada peta topografi, kontur tertutup dengan nilai elevasi makin tinggi ke arah tengah biasanya menunjukkan …","Lembah aliran sungai","Jalan raya","Bukit atau puncak","Garis pantai",2,"Kontur tertutup dengan elevasi meningkat ke pusat menggambarkan bukit atau puncak."],
+  ["Dua kontur berurutan bernilai 120 m dan 125 m. Interval konturnya adalah …","2 m","10 m","25 m","5 m",3,"Interval kontur = 125 m − 120 m = 5 m."]
+ ]},
+ {name:"Pengolahan Data",items:[
+  ["Tahap awal yang penting sebelum data lapangan diolah adalah …","Menghapus seluruh catatan","Memeriksa kelengkapan dan kualitas data","Langsung mencetak peta","Mengganti semua koordinat secara acak",1,"Pemeriksaan data membantu menemukan kesalahan, data kosong, dan ketidaksesuaian sebelum pemodelan."],
+  ["Model elevasi digital (DEM) merepresentasikan …","Sebaran nama jalan","Batas kepemilikan kendaraan","Permukaan elevasi bumi dalam bentuk data digital","Daftar koordinat tanpa nilai tinggi",2,"DEM menyimpan informasi elevasi yang dapat digunakan untuk analisis relief dan pembuatan kontur."],
+  ["Interpolasi dalam pembuatan kontur bertujuan untuk …","Memperkirakan nilai elevasi di antara titik-titik yang diketahui","Mengubah semua titik menjadi simbol jalan","Menghapus variasi ketinggian","Menentukan nama geografis",0,"Interpolasi memperkirakan elevasi di lokasi antara titik sampel sehingga permukaan dan kontur dapat dibentuk."],
+  ["Mengapa data elevasi perlu diperiksa terhadap kesalahan pencilan (outlier)?","Agar legenda lebih panjang","Supaya warna peta lebih cerah","Agar ukuran kertas bertambah","Karena nilai yang keliru dapat menghasilkan relief dan kontur yang menyesatkan",3,"Outlier dapat menyebabkan bentuk permukaan dan garis kontur tidak realistis."]
+ ]},
+ {name:"Penyajian Peta",items:[
+  ["Komponen peta yang menjelaskan arti simbol adalah …","Inset","Legenda","Skala grafis","Garis astronomis",1,"Legenda menerangkan simbol dan warna yang digunakan pada peta."],
+  ["Judul peta sebaiknya memuat …","Nama wilayah dan tema/informasi peta","Nama seluruh anggota kelas","Daftar alat tulis","Riwayat pembuat peta sejak kecil",0,"Judul harus ringkas dan menjelaskan isi atau wilayah yang dipetakan."],
+  ["Mengapa arah utara atau orientasi peta perlu dicantumkan?","Agar peta terlihat penuh","Untuk menambah jumlah warna","Membantu pengguna memahami arah dan orientasi lokasi","Untuk menggantikan skala",2,"Orientasi membantu pembaca menghubungkan arah pada peta dengan arah di lapangan."],
+  ["Pemeriksaan akhir peta topografi sebaiknya mencakup …","Hanya ukuran judul","Hanya warna latar","Hanya jumlah halaman","Ketelitian posisi/elevasi, skala, simbol, legenda, dan keterbacaan",3,"Peta akhir harus diperiksa dari sisi akurasi data, kelengkapan unsur, konsistensi simbol, dan keterbacaan."]
+ ]}
+];
+let scores=[0,0],activeTeam=0,soundOn=true,current=null,played=new Set();
+const board=document.getElementById('board');
+function buildBoard(){
+ board.innerHTML='';
+ categories.forEach((cat,ci)=>{
+  const h=document.createElement('div');h.className='category';h.textContent=cat.name;board.appendChild(h);
+ });
+ // Grid is arranged as six category columns, each with four point rows.
+ for(let ri=0;ri<4;ri++) categories.forEach((cat,ci)=>{
+  const idx=ci*4+ri,points=(ri+1)*100,key=idx;
+  const b=document.createElement('button');b.className='tile';b.id='tile'+key;
+  b.innerHTML=points+'<small>POIN</small>';b.setAttribute('aria-label',cat.name+', '+points+' poin');
+  b.onclick=()=>openQuestion(ci,ri,key);board.appendChild(b);
+ });
+}
+function updateScores(){
+ for(let i=0;i<2;i++){document.getElementById('score'+i).textContent=scores[i];document.getElementById('teamCard'+i).classList.toggle('active',activeTeam===i);}
+ document.getElementById('turnHint').textContent='Giliran: '+document.getElementById('teamName'+activeTeam).value+' • Pilih satu kotak tantangan.';
+}
+function setTeam(i){activeTeam=i;updateScores();tone(520,.07)}
+function tone(freq,duration=.1,type='sine'){
+ if(!soundOn)return;
+ try{const ctx=new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=type;osc.frequency.value=freq;gain.gain.setValueAtTime(.07,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+duration);osc.onended=()=>ctx.close()}catch(e){}
+}
+function openQuestion(ci,ri,key){
+ if(played.has(key))return;
+ current={ci,ri,key,points:(ri+1)*100,answered:false};
+ const q=categories[ci].items[ri];
+ document.getElementById('questionMeta').textContent=categories[ci].name+' • '+current.points+' poin';
+ document.getElementById('questionTitle').textContent='Tantangan untuk '+document.getElementById('teamName'+activeTeam).value;
+ document.getElementById('questionText').textContent=q[0];
+ const opts=document.getElementById('options');opts.innerHTML='';
+ ['A','B','C','D'].forEach((letter,i)=>{
+  const btn=document.createElement('button');btn.className='option';btn.textContent=letter+'. '+q[i+1];btn.onclick=()=>answer(i);opts.appendChild(btn);
+ });
+ const fb=document.getElementById('feedback');fb.className='feedback';fb.innerHTML='';
+ document.getElementById('nextBtn').disabled=true;
+ document.getElementById('modal').classList.add('show');tone(660,.12);
+}
+function answer(choice){
+ if(!current||current.answered)return;current.answered=true;
+ const q=categories[current.ci].items[current.ri],correct=q[5],buttons=[...document.querySelectorAll('.option')];
+ buttons.forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add('correct');if(i===choice&&i!==correct)b.classList.add('wrong')});
+ const fb=document.getElementById('feedback');const good=choice===correct;
+ fb.className='feedback show '+(good?'good':'bad');
+ fb.innerHTML='<strong>'+(good?'✓ Tepat! +'+current.points+' poin':'Belum tepat. Jawaban yang benar: '+['A','B','C','D'][correct])+ '</strong>'+q[6];
+ if(good){scores[activeTeam]+=current.points;tone(780,.12);setTimeout(()=>tone(980,.16),100)}else{tone(190,.2,'triangle')}
+ played.add(current.key);const tile=document.getElementById('tile'+current.key);tile.classList.add('played');tile.disabled=true;
+ document.getElementById('nextBtn').disabled=false;updateScores();
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');current=null}
+function toggleSound(){soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊 Suara: Aktif':'🔇 Suara: Mati';if(soundOn)tone(700,.1)}
+function resetGame(){
+ if(!confirm('Atur ulang seluruh permainan dan skor?'))return;
+ scores=[0,0];played.clear();buildBoard();updateScores();closeModal();tone(440,.1);
+}
+buildBoard();updateScores();
+</script>
+</body>
+</html>
